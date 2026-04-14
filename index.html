@@ -3,98 +3,96 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Resultados Quiniela | BetAR Pro</title>
+    <title>BetAR Pro | Resultados Completos</title>
     <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
     <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-database.js"></script>
     <style>
-        :root {
-            --bet-orange: #f58220;
-            --bet-blue: #002d58;
-            --bet-dark: #001e3a;
+        :root { 
+            --bet-orange: #f58220; 
+            --bet-blue: #002d58; 
+            --bet-dark: #001e3a; 
             --white: #ffffff;
-            --gray: #f4f4f4;
         }
-
-        body {
-            background-color: var(--gray);
-            font-family: 'Inter', sans-serif;
-            margin: 0;
-            padding: 20px;
-            color: var(--bet-blue);
-        }
-
-        .header {
-            background: var(--bet-blue);
-            color: white;
-            padding: 15px;
-            text-align: center;
-            border-radius: 8px 8px 0 0;
-            font-weight: bold;
+        
+        body { background-color: #ebedf0; font-family: 'Roboto', sans-serif; margin: 0; padding: 0; }
+        
+        .header { 
+            background: var(--bet-blue); 
+            color: white; 
+            padding: 15px; 
+            text-align: center; 
+            font-weight: 900; 
+            border-bottom: 4px solid var(--bet-orange); 
             text-transform: uppercase;
-            letter-spacing: 1px;
         }
 
-        .card {
-            background: white;
-            max-width: 500px;
-            margin: 0 auto 20px auto;
-            border-radius: 8px;
-            box-shadow: 0 4px 10px rgba(0,0,0,0.1);
-            overflow: hidden;
-            border-bottom: 4px solid var(--bet-orange);
-        }
-
-        .draw-header {
-            display: flex;
-            justify-content: space-between;
-            padding: 12px 15px;
-            background: var(--bet-dark);
-            color: var(--white);
-            font-size: 14px;
-        }
-
-        .main-number {
-            text-align: center;
-            padding: 20px;
-            font-size: 48px;
-            font-weight: 900;
-            color: var(--bet-blue);
-            background: linear-gradient(to bottom, #fff, #f9f9f9);
-        }
-
-        .grid-numbers {
-            display: grid;
-            grid-template-columns: repeat(5, 1fr);
-            gap: 10px;
-            padding: 15px;
-            background: #eee;
-        }
-
-        .small-number {
-            background: white;
-            padding: 8px;
-            text-align: center;
-            border-radius: 4px;
-            font-weight: bold;
-            font-size: 14px;
+        .container { max-width: 500px; margin: 10px auto; padding: 10px; }
+        
+        .card { 
+            background: white; 
+            border-radius: 12px; 
+            margin-bottom: 20px; 
+            box-shadow: 0 4px 12px rgba(0,0,0,0.1); 
+            overflow: hidden; 
             border: 1px solid #ddd;
         }
 
-        .badge {
-            background: var(--bet-orange);
-            color: white;
-            padding: 2px 8px;
-            border-radius: 4px;
-            font-size: 12px;
+        .draw-info { 
+            background: var(--bet-dark); 
+            color: white; 
+            padding: 10px 15px; 
+            display: flex; 
+            justify-content: space-between; 
+            font-size: 13px; 
+            font-weight: bold; 
         }
+
+        .main-res { 
+            text-align: center; 
+            padding: 15px; 
+            background: linear-gradient(180deg, #fff 0%, #f9f9f9 100%); 
+        }
+
+        .head-number { font-size: 58px; font-weight: 900; color: var(--bet-blue); margin: 0; line-height: 1; }
+        .head-label { font-size: 11px; color: var(--bet-orange); text-transform: uppercase; font-weight: bold; margin-bottom: 5px; }
+
+        /* Grilla Optimizada para 20 números (5 columnas) */
+        .grid-20 { 
+            display: grid; 
+            grid-template-columns: repeat(5, 1fr); 
+            gap: 4px; 
+            padding: 10px; 
+            background: #f1f3f5; 
+            border-top: 1px solid #eee;
+        }
+
+        .ball-item { 
+            background: white; 
+            padding: 6px 2px; 
+            border-radius: 4px; 
+            display: flex; 
+            flex-direction: column; 
+            align-items: center; 
+            border: 1px solid #e0e0e0;
+        }
+
+        .pos { font-size: 8px; color: #999; font-weight: bold; }
+        .num { font-size: 14px; font-weight: bold; color: #333; }
+
+        .update-bar { text-align: center; font-size: 11px; color: #666; padding: 10px; font-weight: bold; }
+        
+        .live-dot { color: var(--bet-orange); animation: blink 1s infinite; margin-right: 5px; }
+        @keyframes blink { 0% { opacity: 1; } 50% { opacity: 0.3; } 100% { opacity: 1; } }
     </style>
 </head>
 <body>
 
-<div id="app">
-    </div>
+<div class="header">BET-AR PRO</div>
+<div id="update-bar" class="update-bar">SINCRONIZANDO CON LA LOTERÍA...</div>
+<div class="container" id="app"></div>
 
 <script>
+    // REEMPLAZA CON TUS DATOS REALES DE FIREBASE
     const firebaseConfig = {
         apiKey: "TU_API_KEY",
         databaseURL: "https://quiniela-argentina-hoy-default-rtdb.firebaseio.com/",
@@ -107,27 +105,48 @@
 
     db.ref('quiniela/cordoba').on('value', (snapshot) => {
         const data = snapshot.val();
-        const app = document.getElementById('app');
-        app.innerHTML = ''; // Limpiar
+        if (!data) return;
 
-        for (const sorteo in data) {
-            if (sorteo === 'actualizado') continue;
-            
-            const info = data[sorteo];
-            const html = `
-                <div class="card">
-                    <div class="draw-header">
-                        <span>${sorteo.replace('_', ' ').toUpperCase()}</span>
-                        <span class="badge">EN VIVO</span>
+        document.getElementById('update-bar').innerText = "ÚLTIMA ACTUALIZACIÓN: " + (data.actualizado || '--:--');
+        const app = document.getElementById('app');
+        app.innerHTML = '';
+
+        const orden = ['la_previa', 'primera', 'matutina', 'vespertina', 'nocturna'];
+
+        orden.forEach(sorteo => {
+            if (data[sorteo]) {
+                const info = data[sorteo];
+                const principal = info.principal || "----";
+                
+                // Filtramos para que SOLO muestre los primeros 20 números del extracto
+                let extracto = Array.isArray(info.extracto) ? info.extracto : [];
+                if (extracto.length > 20) {
+                    extracto = extracto.slice(0, 20);
+                }
+
+                const cardHTML = `
+                    <div class="card">
+                        <div class="draw-info">
+                            <span>${sorteo.replace('_', ' ').toUpperCase()}</span>
+                            <span><span class="live-dot">●</span>EN VIVO</span>
+                        </div>
+                        <div class="main-res">
+                            <div class="head-label">A la cabeza</div>
+                            <h2 class="head-number">${principal}</h2>
+                        </div>
+                        <div class="grid-20">
+                            ${extracto.map((n, index) => `
+                                <div class="ball-item">
+                                    <span class="pos">${index + 1}°</span>
+                                    <span class="num">${n}</span>
+                                </div>
+                            `).join('')}
+                        </div>
                     </div>
-                    <div class="main-number">${info.principal}</div>
-                    <div class="grid-numbers">
-                        ${info.extracto.map(n => `<div class="small-number">${n}</div>`).join('')}
-                    </div>
-                </div>
-            `;
-            app.innerHTML += html;
-        }
+                `;
+                app.innerHTML += cardHTML;
+            }
+        });
     });
 </script>
 </body>
