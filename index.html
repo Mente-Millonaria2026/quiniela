@@ -1,0 +1,141 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>RadioAR Pro - Resultados</title>
+    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-database.js"></script>
+    
+    <style>
+        :root {
+            --spotify-green: #1DB954;
+            --dark-bg: #121212;
+            --card-bg: #181818;
+            --text-main: #FFFFFF;
+            --text-secondary: #B3B3B3;
+        }
+
+        body {
+            background-color: var(--dark-bg);
+            color: var(--text-main);
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            margin: 0;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            min-height: 100vh;
+        }
+
+        .container {
+            width: 90%;
+            max-width: 400px;
+            background: var(--card-bg);
+            padding: 24px;
+            border-radius: 12px;
+            box-shadow: 0 8px 24px rgba(0,0,0,0.5);
+            text-align: center;
+        }
+
+        h1 {
+            color: var(--spotify-green);
+            font-size: 24px;
+            margin-bottom: 8px;
+        }
+
+        .update-time {
+            font-size: 12px;
+            color: var(--text-secondary);
+            margin-bottom: 24px;
+        }
+
+        .result-row {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 12px 0;
+            border-bottom: 1px solid #282828;
+        }
+
+        .result-row:last-child {
+            border-bottom: none;
+        }
+
+        .label {
+            font-weight: bold;
+            color: var(--text-secondary);
+            text-transform: uppercase;
+            font-size: 14px;
+        }
+
+        .number {
+            font-size: 22px;
+            font-weight: 800;
+            color: var(--spotify-green);
+            letter-spacing: 2px;
+        }
+
+        .status {
+            margin-top: 20px;
+            font-size: 11px;
+            color: #444;
+        }
+    </style>
+</head>
+<body>
+
+    <div class="container">
+        <h1>Quiniela Córdoba</h1>
+        <div id="actualizado" class="update-time">Sincronizando...</div>
+
+        <div class="result-row">
+            <span class="label">La Previa</span>
+            <span id="la_previa" class="number">----</span>
+        </div>
+        <div class="result-row">
+            <span class="label">La Primera</span>
+            <span id="primera" class="number">----</span>
+        </div>
+        <div class="result-row">
+            <span class="label">Matutina</span>
+            <span id="matutina" class="number">----</span>
+        </div>
+
+        <div class="status">RadioAR Pro - Datos en tiempo real</div>
+    </div>
+
+    <script>
+        // 1. CONFIGURACIÓN DE TU FIREBASE
+        // Copia esto desde tu consola de Firebase > Project Settings
+        const firebaseConfig = {
+            apiKey: "TU_API_KEY",
+            authDomain: "quiniela-argentina-hoy.firebaseapp.com",
+            databaseURL: "https://quiniela-argentina-hoy-default-rtdb.firebaseio.com/",
+            projectId: "quiniela-argentina-hoy",
+            storageBucket: "quiniela-argentina-hoy.appspot.com",
+            messagingSenderId: "TU_ID",
+            appId: "TU_APP_ID"
+        };
+
+        // Inicializar Firebase
+        firebase.initializeApp(firebaseConfig);
+        const db = firebase.database();
+
+        // 2. ESCUCHAR CAMBIOS EN TIEMPO REAL
+        const quinielaRef = db.ref('quiniela/cordoba');
+
+        quinielaRef.on('value', (snapshot) => {
+            const data = snapshot.val();
+            if (data) {
+                document.getElementById('la_previa').innerText = data.la_previa;
+                document.getElementById('primera').innerText = data.primera;
+                document.getElementById('matutina').innerText = data.matutina;
+                document.getElementById('actualizado').innerText = "Actualizado a las: " + data.ultima_actualizacion;
+            }
+        }, (error) => {
+            console.error("Error leyendo Firebase:", error);
+        });
+    </script>
+</body>
+</html>
