@@ -3,139 +3,132 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>RadioAR Pro - Resultados</title>
+    <title>Resultados Quiniela | BetAR Pro</title>
     <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
     <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-database.js"></script>
-    
     <style>
         :root {
-            --spotify-green: #1DB954;
-            --dark-bg: #121212;
-            --card-bg: #181818;
-            --text-main: #FFFFFF;
-            --text-secondary: #B3B3B3;
+            --bet-orange: #f58220;
+            --bet-blue: #002d58;
+            --bet-dark: #001e3a;
+            --white: #ffffff;
+            --gray: #f4f4f4;
         }
 
         body {
-            background-color: var(--dark-bg);
-            color: var(--text-main);
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: var(--gray);
+            font-family: 'Inter', sans-serif;
             margin: 0;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            justify-content: center;
-            min-height: 100vh;
+            padding: 20px;
+            color: var(--bet-blue);
         }
 
-        .container {
-            width: 90%;
-            max-width: 400px;
-            background: var(--card-bg);
-            padding: 24px;
-            border-radius: 12px;
-            box-shadow: 0 8px 24px rgba(0,0,0,0.5);
+        .header {
+            background: var(--bet-blue);
+            color: white;
+            padding: 15px;
             text-align: center;
+            border-radius: 8px 8px 0 0;
+            font-weight: bold;
+            text-transform: uppercase;
+            letter-spacing: 1px;
         }
 
-        h1 {
-            color: var(--spotify-green);
-            font-size: 24px;
-            margin-bottom: 8px;
+        .card {
+            background: white;
+            max-width: 500px;
+            margin: 0 auto 20px auto;
+            border-radius: 8px;
+            box-shadow: 0 4px 10px rgba(0,0,0,0.1);
+            overflow: hidden;
+            border-bottom: 4px solid var(--bet-orange);
         }
 
-        .update-time {
-            font-size: 12px;
-            color: var(--text-secondary);
-            margin-bottom: 24px;
-        }
-
-        .result-row {
+        .draw-header {
             display: flex;
             justify-content: space-between;
-            align-items: center;
-            padding: 12px 0;
-            border-bottom: 1px solid #282828;
-        }
-
-        .result-row:last-child {
-            border-bottom: none;
-        }
-
-        .label {
-            font-weight: bold;
-            color: var(--text-secondary);
-            text-transform: uppercase;
+            padding: 12px 15px;
+            background: var(--bet-dark);
+            color: var(--white);
             font-size: 14px;
         }
 
-        .number {
-            font-size: 22px;
-            font-weight: 800;
-            color: var(--spotify-green);
-            letter-spacing: 2px;
+        .main-number {
+            text-align: center;
+            padding: 20px;
+            font-size: 48px;
+            font-weight: 900;
+            color: var(--bet-blue);
+            background: linear-gradient(to bottom, #fff, #f9f9f9);
         }
 
-        .status {
-            margin-top: 20px;
-            font-size: 11px;
-            color: #444;
+        .grid-numbers {
+            display: grid;
+            grid-template-columns: repeat(5, 1fr);
+            gap: 10px;
+            padding: 15px;
+            background: #eee;
+        }
+
+        .small-number {
+            background: white;
+            padding: 8px;
+            text-align: center;
+            border-radius: 4px;
+            font-weight: bold;
+            font-size: 14px;
+            border: 1px solid #ddd;
+        }
+
+        .badge {
+            background: var(--bet-orange);
+            color: white;
+            padding: 2px 8px;
+            border-radius: 4px;
+            font-size: 12px;
         }
     </style>
 </head>
 <body>
 
-    <div class="container">
-        <h1>Quiniela Córdoba</h1>
-        <div id="actualizado" class="update-time">Sincronizando...</div>
-
-        <div class="result-row">
-            <span class="label">La Previa</span>
-            <span id="la_previa" class="number">----</span>
-        </div>
-        <div class="result-row">
-            <span class="label">La Primera</span>
-            <span id="primera" class="number">----</span>
-        </div>
-        <div class="result-row">
-            <span class="label">Matutina</span>
-            <span id="matutina" class="number">----</span>
-        </div>
-
-        <div class="status">RadioAR Pro - Datos en tiempo real</div>
+<div id="app">
     </div>
 
-    <script>
-        // 1. CONFIGURACIÓN DE TU FIREBASE
-        // Copia esto desde tu consola de Firebase > Project Settings
-        const firebaseConfig = {
-            apiKey: "TU_API_KEY",
-            authDomain: "quiniela-argentina-hoy.firebaseapp.com",
-            databaseURL: "https://quiniela-argentina-hoy-default-rtdb.firebaseio.com/",
-            projectId: "quiniela-argentina-hoy",
-            storageBucket: "quiniela-argentina-hoy.appspot.com",
-            messagingSenderId: "TU_ID",
-            appId: "TU_APP_ID"
-        };
+<script>
+    const firebaseConfig = {
+        apiKey: "TU_API_KEY",
+        databaseURL: "https://quiniela-argentina-hoy-default-rtdb.firebaseio.com/",
+        projectId: "quiniela-argentina-hoy",
+        appId: "TU_APP_ID"
+    };
 
-        // Inicializar Firebase
-        firebase.initializeApp(firebaseConfig);
-        const db = firebase.database();
+    firebase.initializeApp(firebaseConfig);
+    const db = firebase.database();
 
-        // 2. ESCUCHAR CAMBIOS EN TIEMPO REAL
-        const quinielaRef = db.ref('quiniela/cordoba');
+    db.ref('quiniela/cordoba').on('value', (snapshot) => {
+        const data = snapshot.val();
+        const app = document.getElementById('app');
+        app.innerHTML = ''; // Limpiar
 
-        quinielaRef.on('value', (snapshot) => {
-            const data = snapshot.val();
-            if (data) {
-                document.getElementById('la_previa').innerText = data.la_previa;
-                document.getElementById('primera').innerText = data.primera;
-                document.getElementById('matutina').innerText = data.matutina;
-                document.getElementById('actualizado').innerText = "Actualizado a las: " + data.ultima_actualizacion;
-            }
-        }, (error) => {
-            console.error("Error leyendo Firebase:", error);
-        });
-    </script>
+        for (const sorteo in data) {
+            if (sorteo === 'actualizado') continue;
+            
+            const info = data[sorteo];
+            const html = `
+                <div class="card">
+                    <div class="draw-header">
+                        <span>${sorteo.replace('_', ' ').toUpperCase()}</span>
+                        <span class="badge">EN VIVO</span>
+                    </div>
+                    <div class="main-number">${info.principal}</div>
+                    <div class="grid-numbers">
+                        ${info.extracto.map(n => `<div class="small-number">${n}</div>`).join('')}
+                    </div>
+                </div>
+            `;
+            app.innerHTML += html;
+        }
+    });
+</script>
 </body>
 </html>
